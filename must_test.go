@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE.md file.
 
-package try_test
+package must_test
 
 import (
 	"errors"
@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dsnet/try"
+	"github.com/fbaube/must"
 )
 
 func Test(t *testing.T) {

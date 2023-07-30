@@ -122,7 +122,7 @@
 //		})
 //		...
 //	}
-package try
+package must
 
 import (
 	"runtime"
