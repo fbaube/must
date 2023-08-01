@@ -1,4 +1,4 @@
-# Try: Simplified Error Handling in Go
+# Try^H^H^H Must: Simplified Error Handling in Go
 
 [![GoDev](https://img.shields.io/static/v1?label=godev&message=reference&color=00add8)][godev]
 [![Build Status](https://github.com/dsnet/try/actions/workflows/test.yml/badge.svg?branch=master)][actions]
