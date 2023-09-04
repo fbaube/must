@@ -1,9 +1,65 @@
-# Try^H^H^H Must: Simplified Error Handling in Go
-
-[![GoDev](https://img.shields.io/static/v1?label=godev&message=reference&color=00add8)][godev]
-[![Build Status](https://github.com/dsnet/try/actions/workflows/test.yml/badge.svg?branch=master)][actions]
+# Try^H^H^H Must: Simpler Error Handling in Go
 
 This module reduces the syntactic cost of error handling in Go.
+
+[Documentation](https://pkg.go.dev/github.com/dsnet/try#section-documentation)
+
+[API Quick Tour](https://pkg.go.dev/github.com/dsnet/try#hdr-Quick_tour_of_the_API)
+
+The E family of functions all remove a final error return, panicking if non-nil.
+
+Handle recovers from that panic and allows assignment of the error
+to a return error value. Other panics are not recovered.
+
+	func f() (err error) {
+		defer try.Handle(&err)
+		...
+	}
+
+HandleF is like Handle, but it calls a function after any such assignment.
+
+	func f() (err error) {
+		defer try.HandleF(&err, func() {
+			if err == io.EOF {
+				err = io.ErrUnexpectedEOF
+			}
+		})
+		...
+	}
+
+	func foo(i int) (err error) {
+		defer try.HandleF(&err, func() {
+			err = fmt.Errorf("unable to foo %d: %w", i, err)
+		})
+		...
+	}
+
+F wraps an error with file and line information and calls a function 
+on error. It inter-operates well with testing.TB and log.Fatal.
+
+	func TestFoo(t *testing.T) {
+		defer try.F(t.Fatal)
+		...
+	}
+
+	func main() {
+		defer try.F(log.Fatal)
+		...
+	}
+
+Recover is like F, but it supports more complicated error handling
+by passing the error and runtime frame directly to a function.
+
+	func f() {
+		defer try.Recover(func(err error, frame runtime.Frame) {
+			do something useful with err and frame
+		})
+		...
+	}
+
+
+
+<tt><b>================================================</b></tt>
 
 Example usage in a main program:
 
@@ -39,16 +95,9 @@ func (a *MixedArray) UnmarshalNext(uo json.UnmarshalOptions, d *json.Decoder) er
     case t.Kind() != '[':
         return fmt.Errorf("got %v, expecting array start", t.Kind())
     }
-
-    if err := uo.UnmarshalNext(d, &a.Scalar); err != nil {
-        return err
-    }
-    if err := uo.UnmarshalNext(d, &a.Slice); err != nil {
-        return err
-    }
-    if err := uo.UnmarshalNext(d, &a.Map); err != nil {
-        return err
-    }
+    if err := uo.UnmarshalNext(d, &a.Scalar); err != nil { return err }
+    if err := uo.UnmarshalNext(d, &a.Slice);  err != nil { return err }
+    if err := uo.UnmarshalNext(d, &a.Map);    err != nil { return err }
 
     switch t, err := d.ReadToken(); {
     case err != nil:
@@ -83,65 +132,7 @@ See the [documentation][godev] for more information.
 [godev]: https://pkg.go.dev/github.com/dsnet/try
 [actions]: https://github.com/dsnet/try/actions
 
-## Install
+## Install: <tt> go get -u github.com/dsnet/try </tt>
 
-```
-go get -u github.com/dsnet/try
-```
+## License: BSD
 
-## Semgrep rules
-
-These [semgrep](https://semgrep.dev) rules can help prevent bugs and abuse:
-
-```yaml
-rules:
-  - id: non-deferred-try-handle
-    patterns:
-      - pattern-either:
-          - pattern: try.F(...)
-          - pattern: try.Handle(...)
-          - pattern: try.HandleF(...)
-          - pattern: try.Recover(...)
-      - pattern-not: defer try.F(...)
-      - pattern-not: defer try.Handle(...)
-      - pattern-not: defer try.HandleF(...)
-      - pattern-not: defer try.Recover(...)
-    message: Calls to try handlers must be deferred
-    severity: ERROR
-    languages:
-      - go
-  - id: missing-try-handler
-    patterns:
-      - pattern-either:
-          - pattern: try.E(...)
-          - pattern: try.E1(...)
-          - pattern: try.E2(...)
-          - pattern: try.E3(...)
-          - pattern: try.E4(...)
-      - pattern-not-inside: |
-          ...
-          defer try.F(...)
-          ...
-      - pattern-not-inside: |
-          ...
-          defer try.Handle(...)
-          ...
-      - pattern-not-inside: |
-          ...
-          defer try.HandleF(...)
-          ...
-      - pattern-not-inside: |
-          ...
-          defer try.Recover(...)
-          ...
-    message: Calls to try.E[n] must have a matching function-local handler
-    severity: ERROR
-    languages:
-      - go
-```
-
-## License
-
-BSD - See [LICENSE][license] file
-
-[license]: https://github.com/dsnet/try/blob/master/LICENSE.md

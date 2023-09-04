@@ -1,3 +1,3 @@
-module github.com/dsnet/try
+module github.com/fbaube/must
 
-go 1.18
+go 1.20

@@ -143,6 +143,6 @@ func E4[A, B, C, D any](a A, b B, c C, d D, err error) (A, B, C, D) {
 // affecting the line numbers of anything else in this file.
 // . 
 func f(fn func(...any), w wrapdError) {
-//line try.go:1
+//line must.go:1
 	fn(w)
 }
